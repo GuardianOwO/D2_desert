@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>世界線コレゴス　攻略ガイド</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral & Muted Sky -->
+    <!-- Application Structure Plan: このアプリケーションは、プレイヤーが自分の役割（絶対、普遍、循環）に特化した情報を素早く得られるように、ロールフィルターを中心としたダッシュボード構造を採用しています。ユーザーは最初に自分の役割を選択し、表示されるコンテンツを自分のタスクのみに絞り込むことができます。戦闘の主要な2つのフェーズ（下層・上層）はタブで切り替え可能にし、複雑な手順を段階的に理解できるようにしました。各フェーズには、テキストによる説明だけでなく、HTMLとCSSで作成したシンプルな図解を添えることで、空間的な配置や動きを直感的に把握できるように設計されています。この構造は、長文のガイドを読むのではなく、必要な情報を即座に参照したいというゲーマーのニーズに応えるためのものです。 -->
+    <!-- Visualization & Content Choices: テキストベースのガイドを、インタラクティブなコンポーネントに変換しました。主要なインタラクションは、役割選択ボタンとフェーズ切り替えタブです。これにより、表示される情報をフィルタリングし、整理します。戦闘の流れや役割分担といった複雑な情報は、番号付きリストと、HTMLのdivとTailwind CSSのクラスで構築したフローチャート風の図解で表現しています。これにより、プレイヤーは自分の役割と全体の流れとの関係を視覚的に理解できます。武器の推奨事項は、独立した「ヒント」セクションにまとめ、主要なメカニクスから分離して見やすくしました。これにより、ユーザーは自分のペースで補足情報を確認できます。ライブラリは使用せず、すべての要素はバニラJSとTailwind CSSで実装しています。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f_f_a_f_e_e; /* Warm neutral background */
+        }
+        .tab-btn.active {
+            background-color: #0c4a6e; /* sky-800 */
+            color: white;
+            border-color: #0c4a6e; /* sky-800 */
+        }
+        .role-btn.active {
+            background-color: #0c4a6e; /* sky-800 */
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .role-task {
+            transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out;
+            overflow: hidden;
+        }
+        .role-task.hidden-role {
+            opacity: 0.3;
+            max-height: 5rem;
+        }
+        .diagram-box {
+            border: 2px solid #e5e7eb; /* gray-200 */
+            background-color: #f9fafb; /* gray-50 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+         .diagram-arrow {
+            color: #6b7280; /* gray-500 */
+            font-size: 2rem;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body class="bg-stone-100 text-stone-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-sky-900">世界線コレゴス</h1>
+            <p class="mt-2 text-lg text-stone-600">インタラクティブ攻略ガイド</p>
+        </header>
+
+        <main>
+            <!-- Role Selector -->
+            <section class="mb-8">
+                <h2 class="text-xl font-bold mb-4 text-center text-stone-700">1. まず、あなたの役割を選択してください</h2>
+                <div id="role-selector" class="flex flex-wrap justify-center gap-3 sm:gap-4">
+                    <button data-role="all" class="role-btn active px-6 py-3 font-semibold text-stone-700 bg-white rounded-lg shadow-md hover:bg-stone-50 transition-all duration-200 ease-in-out">総合</button>
+                    <button data-role="absolute" class="role-btn px-6 py-3 font-semibold text-stone-700 bg-white rounded-lg shadow-md hover:bg-stone-50 transition-all duration-200 ease-in-out">絶対</button>
+                    <button data-role="universal" class="role-btn px-6 py-3 font-semibold text-stone-700 bg-white rounded-lg shadow-md hover:bg-stone-50 transition-all duration-200 ease-in-out">普遍</button>
+                    <button data-role="cyclical" class="role-btn px-6 py-3 font-semibold text-stone-700 bg-white rounded-lg shadow-md hover:bg-stone-50 transition-all duration-200 ease-in-out">循環</button>
+                </div>
+            </section>
+
+            <!-- Buff Acquisition -->
+            <section class="mb-8 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-sky-900">2. バフの取得</h2>
+                <p class="mb-6 text-stone-600">エンカウンター開始時、アリーナにあるプレートに乗り、各プレイヤーは自分の役割に対応するバフを取得します。これが全てのギミックの起点となります。</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div class="role-task p-4 border-2 border-transparent rounded-lg bg-stone-50" data-role="universal">
+                        <h3 class="text-lg font-bold text-sky-800">普遍 (4人)</h3>
+                        <p class="mt-1 text-stone-600">スポーン地点から見て<strong class="text-sky-800">一番左</strong>のプレート</p>
+                    </div>
+                    <div class="role-task p-4 border-2 border-transparent rounded-lg bg-stone-50" data-role="absolute">
+                        <h3 class="text-lg font-bold text-sky-800">絶対 (1人)</h3>
+                        <p class="mt-1 text-stone-600"><strong class="text-sky-800">中央</strong>のプレート</p>
+                    </div>
+                    <div class="role-task p-4 border-2 border-transparent rounded-lg bg-stone-50" data-role="cyclical">
+                        <h3 class="text-lg font-bold text-sky-800">循環 (1人)</h3>
+                        <p class="mt-1 text-stone-600">スポーン地点から見て<strong class="text-sky-800">一番右</strong>のプレート</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Phases Section -->
+            <section class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex justify-center border-b border-stone-200 mb-6">
+                    <button id="tab-lower" class="tab-btn active text-lg font-semibold py-3 px-6 border-b-4 transition-colors duration-300">下層プラットフォーム</button>
+                    <button id="tab-upper" class="tab-btn text-lg font-semibold py-3 px-6 border-b-4 border-transparent transition-colors duration-300">上層プラットフォーム</button>
+                </div>
+
+                <!-- Lower Platform Content -->
+                <div id="content-lower" class="content-section active">
+                    <h2 class="text-2xl font-bold mb-2 text-sky-900">3. 下層: 砂時計チャージ</h2>
+                    <p class="mb-6 text-stone-600">このフェーズの目標は、チームで協力して中央の砂時計にクロノンを6個貯めることです。各役割の連携が鍵となります。</p>
+                    
+                    <div class="space-y-6">
+                        <div class="role-task p-4 rounded-lg bg-stone-50 border-l-4 border-sky-600" data-role="universal">
+                            <h4 class="font-bold text-lg text-sky-800">ステップ1: タレット破壊 & 雑魚処理</h4>
+                            <p class="text-stone-700">ボスが召喚する4つのタレットを破壊します。これは主に<strong class="text-sky-800">普遍</strong>のプレイヤー3人の仕事です。</p>
+                            <p class="text-stone-700">SRやロケットパルスなどの特殊武器でタレットを破壊しましょう。オーブを出してスペシャルフィニッシャーで特殊弾を生成しまくって下さい</p>
+                        </div>
+
+                        <div class="flex justify-center my-2"><div class="diagram-arrow">↓</div></div>
+
+                        <div class="p-4 rounded-lg bg-stone-50 border-l-4 border-stone-400">
+                             <h4 class="font-bold text-lg text-stone-700">ステップ2: テンポラル・オクルス取得</h4>
+                            <p class="text-stone-700">タレット破壊後、柱のプレートに<strong class="text-sky-800">絶対・普遍・循環</strong>の各プレイヤーが同時に乗り、「テンポラル・オクルス」バフを獲得します。</p>
+                        </div>
+                        
+                        <div class="flex justify-center my-2"><div class="diagram-arrow">↓</div></div>
+
+                        <div>
+                            <h4 class="font-bold text-lg mb-4 text-center text-stone-700">ステップ3: マイン破壊 & クロノン収集 (6回繰り返し)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                               <div class="role-task diagram-box" data-role="absolute">
+                                    <h5 class="font-bold text-center text-sky-800">絶対の役割</h5>
+                                    <ol class="list-decimal list-inside mt-2 space-y-1 text-stone-600">
+                                        <li>中央リングの<strong class="text-red-500">色</strong>を報告</li>
+                                        <li>条件が合えばマインを破壊</li>
+                                    </ol>
+                                </div>
+                                <div class="role-task diagram-box" data-role="universal">
+                                    <h5 class="font-bold text-center text-sky-800">普遍の役割</h5>
+                                    <ol class="list-decimal list-inside mt-2 space-y-1 text-stone-600">
+                                        <li>マインの<strong class="text-blue-500">色</strong>を報告</li>
+                                        <li>雑魚処理とタレット破壊を担当</li>
+                                    </ol>
+                                </div>
+                               <div class="role-task diagram-box" data-role="cyclical">
+                                    <h5 class="font-bold text-center text-sky-800">循環の役割</h5>
+                                    <ol class="list-decimal list-inside mt-2 space-y-1 text-stone-600">
+                                        <li>マインが<strong class="text-yellow-500">アクティブか</strong>報告</li>
+                                        <li>ドロップしたクロノンを回収</li>
+                                        <li>砂時計のリングを潜ると納品対象の色が変わります</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            <p class="mt-4 text-center text-sm text-stone-500">条件: 「中央リングの色」と「マインの色」が一致し、かつマインが「アクティブ」であること。</p>
+                        </div>
+
+                        <div class="flex justify-center my-2"><div class="diagram-arrow">↓</div></div>
+
+                        <div class="p-4 rounded-lg bg-green-50 border-l-4 border-green-600">
+                            <h4 class="font-bold text-lg text-green-800">完了: 上層へ</h4>
+                            <p class="text-green-700">砂時計が満たされたらクリスタルを撃ち、出現した足場から全員で上層へ移動します。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upper Platform Content -->
+                <div id="content-upper" class="content-section">
+                    <h2 class="text-2xl font-bold mb-2 text-sky-900">4. 上層: DPSフェーズ</h2>
+                    <p class="mb-6 text-stone-600">上層ではキューブのギミックを解除してボスへのダメージフェーズを開始します。ここでも各役割の視点が重要です。</p>
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="font-bold text-lg mb-4 text-center text-stone-700">ステップ1: キューブのインタラクション (4回繰り返し)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                               <div class="role-task diagram-box" data-role="absolute">
+                                    <h5 class="font-bold text-center text-sky-800">絶対の役割</h5>
+                                    <p class="mt-2 text-stone-600">見える3つのキューブのうち、他2役が共有しているキューブとインタラクトする。<br>循環に言われた方をインタラクト</p>
+                                </div>
+                                <div class="role-task diagram-box" data-role="universal">
+                                    <h5 class="font-bold text-center text-sky-800">普遍の役割</h5>
+                                    <p class="mt-2 text-stone-600">見える2つのキューブの上に立つ。<br>4人いるので残り二人は次のキューブの上に立っておく<br>循環に言われなかったプレイヤーは次のキューブに向かう</p>
+                                </div>
+                               <div class="role-task diagram-box" data-role="cyclical">
+                                    <h5 class="font-bold text-center text-sky-800">循環の役割</h5>
+                                    <p class="mt-2 text-stone-600">普遍持ちがキューブの上に立っています<br>自分のキューブと重なっている方のプレイヤー名を伝える。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center my-2"><div class="diagram-arrow">↓</div></div>
+                        
+                        <div class="p-4 rounded-lg bg-red-50 border-l-4 border-red-600">
+                             <h4 class="font-bold text-lg text-red-800">ステップ2: DPSフェーズ開始！</h4>
+                            <ul class="list-disc list-inside mt-2 space-y-1 text-red-700">
+                                <li>ボスの「目」が出現。クリティカルスポットなので集中攻撃！</li>
+                                <li><strong class="font-semibold">クロノン収集役 (1人)</strong>: 散らばったクロノンを収集し、色の変わるリングに通す。</li>
+                                <li>全員、ボスのレーザーや地面のダメージエリアを避けながら攻撃を続ける。</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="flex justify-center my-2"><div class="diagram-arrow">↓</div></div>
+
+                        <div class="p-4 rounded-lg bg-stone-50 border-l-4 border-stone-400">
+                             <h4 class="font-bold text-lg text-stone-700">繰り返し</h4>
+                            <p class="text-stone-700">このプロセスを最大3回繰り返すか、ボスを倒すまで続けます。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Tips Section -->
+            <section class="mt-8 bg-white p-6 rounded-xl shadow-lg">
+                 <h2 class="text-2xl font-bold mb-4 text-sky-900">5. ダメージを与える際のヒント</h2>
+                 <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-sky-50 p-4 rounded-lg">
+                        <h3 class="font-bold text-sky-800">推奨武器</h3>
+                        <p class="text-sky-700 mt-1">「サンダーロード」や「ウルブズ・ロード」による精密ダメージが非常に効果的です。</p>
+                        <p class="text-sky-700 mt-1">武器>スーパーの順に出来る限りステータスを盛る</p>
+                        <p class="text-sky-700 mt-1">頭にスーパーの泉x2、胴体にアーク耐性、足にサージx3、クラスに時間膨張x1</p>
+                    </div>
+                    <div class="bg-sky-50 p-4 rounded-lg">
+                        <h3 class="font-bold text-sky-800">スーパースキル</h3>
+                        <p class="text-sky-700 mt-1">「サンダークラッシュ」のような高バーストダメージを与える単発スパチャスキルが有効です。</p>
+                        <p class="text-sky-700 mt-1">タイタン推奨エキゾチック装備：流星のキュイラス</p>
+                        <p class="text-sky-700 mt-1">ハンター推奨エキゾチック装備：セレスティアル・ナイトホーク</p>
+                    </div>
+                     <div class="bg-sky-50 p-4 rounded-lg md:col-span-2">
+                        <h3 class="font-bold text-sky-800">戦略</h3>
+                        <p class="text-sky-700 mt-1">弾薬が切れた際にロードアウトシステムで武器を切り替える戦法は、ノーマルモードでも効率的です。</p>
+                        <p class="text-sky-700 mt-1">長いDPSなのでサンダーロードは撃ち切れるのでサンダーロード＋ウルブズロードが効率的です。サージを変更するのも踏まえるとロードアウトで変更をしましょう</p>
+                    </div>
+                 </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 text-stone-500 text-sm">
+            <p>このガイドがあなたの勝利に貢献しますように。</p>
+        </footer>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const roleSelector = document.getElementById('role-selector');
+            const roleButtons = roleSelector.querySelectorAll('.role-btn');
+            const roleTasks = document.querySelectorAll('.role-task');
+            
+            const tabLower = document.getElementById('tab-lower');
+            const tabUpper = document.getElementById('tab-upper');
+            const contentLower = document.getElementById('content-lower');
+            const contentUpper = document.getElementById('content-upper');
+            
+            let currentRole = 'all';
+
+            function updateRoleView() {
+                roleTasks.forEach(task => {
+                    const taskRole = task.dataset.role;
+                    if (currentRole === 'all' || taskRole === currentRole) {
+                        task.classList.remove('hidden-role');
+                        task.style.maxHeight = task.scrollHeight + "px";
+                    } else {
+                        task.classList.add('hidden-role');
+                         task.style.maxHeight = "5rem";
+                    }
+                });
+            }
+
+            roleSelector.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    roleButtons.forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentRole = e.target.dataset.role;
+                    updateRoleView();
+                }
+            });
+
+            tabLower.addEventListener('click', () => {
+                tabLower.classList.add('active');
+                tabUpper.classList.remove('active');
+                contentLower.classList.add('active');
+                contentUpper.classList.remove('active');
+            });
+
+            tabUpper.addEventListener('click', () => {
+                tabUpper.classList.add('active');
+                tabLower.classList.remove('active');
+                contentLower.classList.remove('active');
+                contentUpper.classList.add('active');
+            });
+            
+            // Initial view setup
+            updateRoleView();
+        });
+    </script>
+</body>
+</html>
