@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>時砕けのコレゴス 攻略ガイド</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Warm Neutral (Amber, Stone, Beige) -->
+    <!-- Application Structure Plan: Single-page scrolling SPA with a sticky navigation header (JS-powered smooth scroll). Sections: Overview (Key Concepts), Phase 1, Phase 2, Phase 3, Phase 4, Final DPS, and a dedicated Mini-Boss Mechanics reference. This structure breaks the cyclical, multi-phase fight into chronological, bookmark-able sections, with complex repeated mechanics (mini-bosses) grouped for easy reference. This is more user-friendly for in-game reference than a linear document. -->
+    <!-- Visualization & Content Choices: Report Info: Fight Flow (e.g., Phase 2) -> Goal: Show sequence of events -> Viz: HTML/Tailwind "flowchart" (flexbox with arrows) -> Interaction: None (static info) -> Justification: Clarifies the complex loop visually. | Report Info: Mini-Boss mechanics -> Goal: Explain 3 distinct, complex mechanics -> Viz: 3-column grid of "cards" (HTML/Tailwind) -> Interaction: None (static info) -> Justification: Groups related info for easy lookup. | Report Info: Key Terms (Banishment, Crystals) -> Goal: Define core concepts -> Viz: Grid of "Key Term" cards (HTML/Tailwind) -> Interaction: None (static info) -> Justification: Provides a quick glossary. No quantitative data, so no charts are used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #FFFAF0; 
+            color: #2d3748; 
+        }
+        main section[id] {
+            scroll-margin-top: 80px; 
+        }
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: #d97706; 
+            margin-left: 0.5rem;
+            margin-right: 0.5rem;
+        }
+        .flow-box {
+            background-color: #fff;
+            border: 1px solid #fde68a; 
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        .key-concept-card {
+            background-color: #FFFBEB; 
+            border: 1px solid #FCD34D; 
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-amber-50 text-stone-800">
+
+    <header id="main-header" class="bg-white/90 backdrop-blur-sm shadow-md sticky top-0 z-50 w-full transition-all duration-300">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <h1 class="text-2xl font-bold text-amber-700">時砕けのコレゴス 攻略ガイド</h1>
+                <nav class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 md:gap-x-5 mt-2 md:mt-0">
+                    <a href="#overview" data-target="#overview" class="text-stone-600 hover:text-amber-600 font-medium transition-colors">概要</a>
+                    <a href="#phase1" data-target="#phase1" class="text-stone-600 hover:text-amber-600 font-medium transition-colors">フェーズ①</a>
+                    <a href="#phase2" data-target="#phase2" class="text-stone-600 hover:text-amber-600 font-medium transition-colors">フェーズ②</a>
+                    <a href="#phase3" data-target="#phase3" class="text-stone-600 hover:text-amber-600 font-medium transition-colors">フェーズ③</a>
+                    <a href="#phase4" data-target="#phase4" class="text-stone-600 hover:text-amber-600 font-medium transition-colors">フェーズ④</a>
+                    <a href="#final-dps" data-target="#final-dps" class="text-stone-600 hover:text-amber-600 font-medium transition-colors">最終DPS</a>
+                    <a href="#minibosses" data-target="#minibosses" class="text-stone-600 hover:text-amber-600 font-medium transition-colors">ミニボス攻略</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+
+        <section id="overview" class="mb-16">
+            <h2 class="text-3xl font-bold text-amber-700 mb-4 border-b-2 border-amber-200 pb-2">概要: コレゴス戦の流れ</h2>
+            <p class="text-lg text-stone-700 mb-6">
+                コレゴス戦は、ボスが逃亡する（ワイプする）たびに進行度がリセットされ、新たなギミックが追加されていく長期戦です。
+                主な目的は、3つの「クリスタル部屋」にいるミニボスを討伐し、中央エリアのクリスタルをすべて破壊することです。
+                戦闘は「ワイプ数（逃亡回数）」によって①～⑤のフェーズに分かれています。
+            </p>
+            <h3 class="text-2xl font-semibold text-amber-600 mb-4">キーコンセプト</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="key-concept-card">
+                    <h4 class="text-xl font-bold text-stone-800 mb-2">追放デバフ</h4>
+                    <p class="text-stone-700">ランダムな2名に付与される30秒のデバフ。切れる際に中央部屋にいると即死。対象者はポータルから「クリスタル部屋」へ移動するか、中央のオーブで解除します。</p>
+                </div>
+                <div class="key-concept-card">
+                    <h4 class="text-xl font-bold text-stone-800 mb-2">クリスタル破壊</h4>
+                    <p class="text-stone-700">中央のクリスタルには「外側」と「内側」があります。「外側」は対応する「一時性バフ」を持つ人がインタラクト、「内側」はバフを持たない人が射撃で破壊できます。</p>
+                </div>
+                <div class="key-concept-card">
+                    <h4 class="text-xl font-bold text-stone-800 mb-2">カプセルと同調</h4>
+                    <p class="text-stone-700">フェーズ終了時に中央のカプセルの色を確認し、次のスタート時にその色に「同調」します。これにより、クリスタル部屋でドロップする「クローノン（砂）」の色が決まります。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="phase1" class="mb-12 p-6 bg-white rounded-lg shadow-lg border border-gray-200">
+            <h2 class="text-3xl font-bold text-amber-700 mb-4">フェーズ① (ワイプ 0回)</h2>
+            <p class="text-stone-700 mb-6">
+                戦闘開始直後の最初のサイクルです。目的は、最初のクリスタル部屋（ペアA）を解放し、クリスタルの「外側」だけを破壊することです。
+            </p>
+            <div class="flex flex-col md:flex-row flex-wrap items-center justify-center gap-4 text-sm md:text-base">
+                <div class="flow-box">戦闘開始<br>2名に「追放」デバフ</div>
+                <span class="flow-arrow hidden md:block">&rarr;</span>
+                <div class="flow-box">クリスタル部屋が開くまで<br>オーブで「追放」を解除</div>
+                <span class="flow-arrow hidden md:block">&rarr;</span>
+                <div class="flow-box">ペアAが部屋に侵入<br>(一時性バフ入手)</div>
+                <span class="flow-arrow hidden md:block">&rarr;</span>
+                <div class="flow-box">内外のサイクロプス討伐<br>中央へ帰還</div>
+                <span class="flow-arrow hidden md:block">&rarr;</span>
+                <div class="flow-box">ペアAがクリスタル外側を破壊</div>
+                <span class="flow-arrow hidden md:block">&rarr;</span>
+                <div class="flow-box">カプセルの色を確認<br>コレゴスの逃亡を待つ</div>
+            </div>
+        </section>
+
+        <section id="phase2" class="mb-12 p-6 bg-white rounded-lg shadow-lg border border-gray-200">
+            <h2 class="text-3xl font-bold text-amber-700 mb-4">フェーズ② (ワイプ 1回)</h2>
+            <p class="text-stone-700 mb-6">
+                最初のミニボスを討伐し、1つ目のクリスタルを完全に破壊するフェーズです。
+            </p>
+            <ul class="list-disc list-inside space-y-2 mb-6 text-stone-700">
+                <li>開始前に、フェーズ①で見たカプセルの色に「同調」します。</li>
+                <li>フェーズ①と同様に、ペアAがクリスタル部屋に入れるまで「追放」デバフを回します。</li>
+                <li><strong>クリスタル部屋 (ペアA):</strong>
+                    <ol class="list-decimal list-inside ml-6 mt-2 space-y-1">
+                        <li>サイクロプスとインプを討伐。</li>
+                        <li>ワイバーンが出現し、同調した色の「クローノン（砂）」をドロップ。</li>
+                        <li>クローノンを砂時計に淹れ、ミニボスギミックを開始。
+                            (ギミック詳細は <a href="#minibosses" data-target="#minibosses" class="text-amber-600 hover:underline font-semibold data-scroll-link">ミニボス攻略セクション</a> を参照)</li>
+                        <li>ミニボスを討伐し、中央部屋へ帰還。</li>
+                    </ol>
+                </li>
+                <li><strong>中央部屋:</strong>
+                    <ol class="list-decimal list-inside ml-6 mt-2 space-y-1">
+                        <li>ペアAが対応するクリスタルの「外側」を破壊 (一時性バフ)。</li>
+                        <li>他のプレイヤーが「内側」を射撃で破壊。</li>
+                    </ol>
+                </li>
+                <li>クリスタルが1つ破壊されるとDPSフェーズ開始。</li>
+                <li>DPS後、再度カプセルの色を確認し、コレゴスの逃亡を待ちます。</li>
+            </ul>
+        </section>
+        
+        <section id="phase3" class="mb-12 p-6 bg-white rounded-lg shadow-lg border border-gray-200">
+            <h2 class="text-3xl font-bold text-amber-700 mb-4">フェーズ③ (ワイプ 2回)</h2>
+            <p class="text-stone-700 mb-6">
+                2つ目のクリスタル部屋（ペアB）を攻略し、2つ目のクリスタルを破壊します。
+            </p>
+            <ul class="list-disc list-inside space-y-2 mb-6 text-stone-700">
+                <li>開始前に、フェーズ②で見たカプセルの色に「同調」します。</li>
+                <li><strong>重要:</strong> ペアAが担当したミニボスが最初から中央エリアに出現しています。ペアA（破滅バフ持ち）がこれを討伐し、一時性バフを入手します。</li>
+                <li>これにより、ペアAはミニボスギミックをスキップして、1つ目のクリスタルを即座に破壊できます。</li>
+                <li>その後、別のペアBが2つ目のクリスタル部屋に入れるようになるまで「追放」デバフを回します。</li>
+                <li>ペアBは、フェーズ②のペアAと全く同じ手順（インプ討伐 → 砂入れ → ギミック → ミニボス討伐）を行います。</li>
+                <li>ペアBが中央に戻り、2つ目のクリスタル（内外）を破壊。</li>
+                <li>DPSフェーズ → カプセルの色確認 → 逃亡を待つ。</li>
+            </ul>
+        </section>
+        
+        <section id="phase4" class="mb-12 p-6 bg-white rounded-lg shadow-lg border border-gray-200">
+            <h2 class="text-3xl font-bold text-amber-700 mb-4">フェーズ④ (ワイプ 3回)</h2>
+            <p class="text-stone-700 mb-6">
+                最後のクリスタル部屋（ペアC）を攻略し、全てのクリスタルを破壊。その後、特殊なDPSフェーズに移行します。
+            </p>
+            <ul class="list-disc list-inside space-y-2 mb-6 text-stone-700">
+                <li>開始前に、フェーズ③で見たカプセルの色に「同調」します。</li>
+                <li>ペアAとペアBが、それぞれ担当したミニボスを中央エリアで討伐。即座にクリスタルを2つ破壊します。</li>
+                <li>最後のペアCが3つ目のクリスタル部屋に入れるようになるまで「追放」デバフを回します。</li>
+                <li>ペアCは、フェーズ②③と同じ手順（インプ討伐 → 砂入れ → ギミック → ミニボス討伐）を行います。</li>
+                <li>ペアCが中央に戻り、3つ目のクリスタル（内外）を破壊。</li>
+                <li><strong>特殊DPSフェーズ:</strong>
+                    <ol class="list-decimal list-inside ml-6 mt-2 space-y-1">
+                        <li><strong>移動:</strong> 全員、中央エリア右奥の「白の同調カプセル」と「3つのプレート」がある場所へ移動します。</li>
+                        <li><strong>開始:</strong> 3つのプレートにプレイヤーが同時に乗るとDPSスタート。（注: 1人だけ乗らないでおく）</li>
+                        <li>乗ったプレイヤーには一時性が付与されます。（乗らなかった1人が延長ギミックを担当）</li>
+                        <li>DPS中、隔離クリスタルが出現。ランダムな1名に「絶対的一時性」が付与。</li>
+                        <li>「絶対的一時性」の人が外側、バフを持たない人（プレートに乗らなかった人）が内側を破壊し、DPSを延長します。</li>
+                    </ol>
+                </li>
+                <li>DPS後、コレゴスの逃亡を待ちます。（カプセルの色確認は不要）</li>
+            </ul>
+        </section>
+
+        <section id="final-dps" class="mb-12 p-6 bg-white rounded-lg shadow-lg border border-gray-200">
+            <h2 class="text-3xl font-bold text-amber-700 mb-4">フェーズ⑤ 最終DPS</h2>
+            <p class="text-stone-700 mb-6">
+                最後の決戦フェーズです。ギミックを処理しながらボスを削り切ります。
+            </p>
+            <ul class="list-disc list-inside space-y-2 mb-6 text-stone-700">
+                <li>ボスのいた場所にハーピーが出現。倒すと奥のポータルが開くので、全員で侵入します。</li>
+                <li><strong>プラットフォーム登り:</strong>
+                    <ol class="list-decimal list-inside ml-6 mt-2 space-y-1">
+                        <li>入ると全員に「絶対的一時性」が付与されます。</li>
+                        <li>プラットフォームを登る途中にある「コレゴスのオーブ」を1人1個ずつ拾い、デバフを解除します。</li>
+                    </ol>
+                </li>
+                <li><strong>最終DPS:</strong>
+                    <ol class="list-decimal list-inside ml-6 mt-2 space-y-1">
+                        <li>登り切ると、ランダムな1名に「絶対的一時性」が再度付与されます。</li>
+                        <li>同時に周辺3箇所（左、後、右）にクリスタルが出現。</li>
+                        <li>「絶対的一時性」の人が外側、他の人が内側を破壊します。</li>
+                        <li>このクリスタル破壊ギミックはDPS中、一定時間ごと（ラストスタンド中も）に繰り返されます。</li>
+                        <li>ギミックを処理しつつボスを削り切れないと強制全滅となります。</li>
+                    </ol>
+                </li>
+            </ul>
+        </section>
+
+        <section id="minibosses" class="mb-12">
+            <h2 class="text-3xl font-bold text-amber-700 mb-4 border-b-2 border-amber-200 pb-2">ミニボス攻略 (クリスタル部屋ギミック)</h2>
+            <p class="text-lg text-stone-700 mb-6">
+                クリスタル部屋でクローノン（砂）を淹れると開始するミニボスギミックです。担当するボスはレイドで倒した順番になります。
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-6 bg-white rounded-lg shadow-lg border-t-4 border-blue-400">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-3">◯ イアトロス</h3>
+                    <ul class="list-disc list-inside space-y-2 text-stone-700">
+                        <li>2人のプレイヤーが担当します。</li>
+                        <li>「心臓拡張期」の4カウント目に、2人が同時に箱を1つずつ撃ちます。（計3個、合計6発）</li>
+                        <li>箱を撃つたびに「拘束ミサイル」が飛んできます（自身で解除可能）。</li>
+                        <li>両者とも3個の箱を撃ち終える（全6個）と、ボスにダメージが入るようになります。</li>
+                    </ul>
+                </div>
+                <div class="p-6 bg-white rounded-lg shadow-lg border-t-4 border-green-400">
+                    <h3 class="text-2xl font-bold text-green-600 mb-3">◯ アグライオス</h3>
+                    <ul class="list-disc list-inside space-y-2 text-stone-700">
+                        <li>片方のプレイヤーが「絶対的一時性」を入手。</li>
+                        <li>バフ持ちがボスの真下にある「光る目」を見てコールします。</li>
+                        <li>もう片方のプレイヤーが、コールされた目を撃ちます。</li>
+                        <li>これを3回繰り返すと、ボスにダメージが入るようになります。</li>
+                    </ul>
+                </div>
+                <div class="p-6 bg-white rounded-lg shadow-lg border-t-4 border-purple-400">
+                    <h3 class="text-2xl font-bold text-purple-600 mb-3">◯ エポプテス</h3>
+                    <ul class="list-disc list-inside space-y-2 text-stone-700">
+                        <li>片方のプレイヤーが「普遍的一時性」を入手。</li>
+                        <li>バフ持ちが「目のスポットライト」に入りゲージを貯めると、2個の「赤色ゲート」が見えます。これをコール。</li>
+                        <li>もう片方のプレイヤーにも、別の2個の「赤色ゲート」が見えています。</li>
+                        <li>2人がコールしあい、両者に見える「共通のゲート」を探します。</li>
+                        <li>共通ゲートの「頂点のオーブ」を触ると、ボスにダメージが入るようになります。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-6 bg-white/50 mt-12 border-t border-gray-200">
+        <p class="text-sm text-stone-500">コレゴス攻略ガイド | インタラクティブ・ガイド</p>
+    </footer>
+
+    <button id="to-top-btn" class="hidden fixed bottom-6 right-6 bg-amber-600 hover:bg-amber-700 text-white p-3 rounded-full shadow-lg transition-all duration-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+        </svg>
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const header = document.getElementById('main-header');
+            const headerHeight = header.offsetHeight;
+            const toTopBtn = document.getElementById('to-top-btn');
+
+            const scrollLinks = document.querySelectorAll('a[data-target]');
+            const dataScrollLinks = document.querySelectorAll('a.data-scroll-link');
+            const sections = document.querySelectorAll('main section[id]');
+            const navLinks = document.querySelectorAll('header nav a[data-target]');
+
+            function smoothScrollTo(targetElement) {
+                if (targetElement) {
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 20;
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
+                    });
+                }
+            }
+            
+            function handleNavLinkClick(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('data-target');
+                const targetElement = document.querySelector(targetId);
+                smoothScrollTo(targetElement);
+            }
+
+            scrollLinks.forEach(link => {
+                link.addEventListener('click', handleNavLinkClick);
+            });
+
+            dataScrollLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    smoothScrollTo(targetElement);
+                });
+            });
+
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > 300) {
+                    toTopBtn.classList.remove('hidden');
+                } else {
+                    toTopBtn.classList.add('hidden');
+                }
+
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop - headerHeight - 40;
+                    if (pageYOffset >= sectionTop) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('font-bold', 'text-amber-700');
+                    link.classList.add('text-stone-600');
+                    if (link.getAttribute('data-target') === `#${current}`) {
+                        link.classList.add('font-bold', 'text-amber-700');
+                        link.classList.remove('text-stone-600');
+                    }
+                });
+            });
+
+            toTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
