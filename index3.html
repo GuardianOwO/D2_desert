@@ -25,7 +25,7 @@
             height: 846px; /* ⬅️ 変更 */
             margin: 20px auto;
             border: 2px solid #333;
-            background-image: url('https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main//images/background-base.png'); /* 初期背景 */
+            background-image: url('https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main/images/background-base.png'); /* 初期背景 */
             background-size: cover;
             background-color: #fff;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -122,7 +122,7 @@
         <div id="draggable-objects-container"></div>
         
         <img id="rotating-img" 
-             src="https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main//images/rotating-indicator.png" 
+             src="https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main/images/rotating-indicator.png" 
              alt="回転する注意マーク">
 
     </div>
@@ -239,7 +239,7 @@ allFileNames.forEach((fileName, index) => {
                 const id = `draggable-obj-${fileName.replace('.', '-')}`;
                 const img = document.createElement('img');
                 img.id = id;
-                img.src = isFixed && fileName.startsWith('beem-') ? 'https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main//images/beem.png' : `https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main//images/${fileName}`;
+                img.src = isFixed && fileName.startsWith('beem-') ? 'https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main/images/beem.png' : `https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main/images/${fileName}`;
                 img.alt = `移動可能な部品 ${fileName}`;
                 
                 let top, left, width, height, rotate_style_value, opacity; // 修正点: rotate_style_valueを定義
@@ -450,7 +450,7 @@ function saveCurrentState() {
             if (currentBackground === 1) {
                 // Page 1 -> Page 2へ
                 currentBackground = 2;
-                workArea.style.backgroundImage = "url('https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main//images/background-base2.png')";
+                workArea.style.backgroundImage = "url('https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main/images/background-base2.png')";
                 toggleButton.textContent = "背景を切り替える (現在: 2ページ目)";
                 
                 // 🔄 回転画像の表示と逆回転アニメーションの設定
@@ -469,7 +469,7 @@ function saveCurrentState() {
             } else {
                 // Page 2 -> Page 1へ
                 currentBackground = 1;
-                workArea.style.backgroundImage = "url('https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main//images/background-base.png')";
+                workArea.style.backgroundImage = "url('https://raw.githubusercontent.com/GuardianOwO/D2_desert/refs/heads/main/images/background-base.png')";
                 toggleButton.textContent = "背景を切り替える (現在: 1ページ目)";
                 
                 // 🔄 回転画像の非表示とアニメーションの停止
