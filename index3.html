@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作業説明用ウェブページ</title>
+    <style>
+        /*
+        ========================================
+        CSS (スタイル定義) - サイズとアニメーション修正
+        ========================================
+        */
+
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        /* 🖼️ メインの作業エリア - サイズ変更 */
+        #work-area {
+            position: relative; 
+            width: 1188px; /* ⬅️ 変更 */
+            height: 846px; /* ⬅️ 変更 */
+            margin: 20px auto;
+            border: 2px solid #333;
+            background-image: url('images/background-base.png'); /* 初期背景 */
+            background-size: cover;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow: hidden; /* オブジェクトがエリア外に出ないようにする */
+        }
+
+        /* 🖱️ 移動可能なオブジェクトの共通スタイル - サイズ変更 */
+        .draggable-object {
+            position: absolute; 
+            width: 35px; /* ⬅️ 変更 */
+            height: 35px; /* ⬅️ 変更 */
+            cursor: grab;
+            border: 2px solid rgba(255, 0, 0, 0.5); 
+            box-sizing: border-box;
+            user-select: none;
+            /* ドラッグ時に手前に表示 */
+            z-index: 10; 
+        }
+        /* 📌 固定画像用のスタイル */
+        .fixed-draggable-object {
+            position: absolute; 
+            cursor: grab;
+            border: 2px solid rgba(0, 123, 255, 0.192); /* 区別しやすいように枠線の色を変更 */
+            box-sizing: border-box;
+            user-select: none;
+            z-index: 10;
+            /* サイズはJSで個別に設定するためここでは定義しない */
+        }
+
+        /* 🔄 360度回転アニメーション定義 */
+        @keyframes slow-spin-reverse { /* 逆回転キーフレーム */
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); } 
+        }
+        @keyframes slow-spin-forward { /* 順回転キーフレーム (予備) */
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        #rotating-img {
+            position: absolute;
+            top: 270px; 
+            left: 77px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            /* アニメーションはJSで設定するため初期はなし */
+            display: none; /* ⬅️ 初期状態は非表示 */
+            z-index: 5;
+        }
+
+        /* 🎲 ランダム切り替え画像のスタイル (変更なし) */
+        .random-image {
+            width: 150px;
+            height: 100px;
+            border: 3px dashed #007bff;
+            cursor: pointer;
+        }
+        #random-area-1 { position: absolute; top: 100px; right: 30px; }
+        #random-area-2 { position: absolute; bottom: 30px; left: 30px; }
+
+        /* コントロールパネル */
+        .instruction-button {
+            display: block;
+            width: 300px;
+            margin: 10px auto;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>作業説明ウェブページ</h1>
+
+    <div class="control-panel">
+        <button id="toggle-background-button" class="instruction-button" style="background-color: #007bff;">
+            背景を切り替える (現在: 1ページ目)
+        </button>
+    </div>
+
+    <div id="work-area">
+        <div id="draggable-objects-container"></div>
+        
+        <img id="rotating-img" 
+             src="images/rotating-indicator.png" 
+             alt="回転する注意マーク">
+
+    </div>
+
+    <script>
+        /*
+        ========================================
+        JavaScript (機能実装)
+        ========================================
+        */
+
+        // 共通変数 (CSSと同期)
+        const workArea = document.getElementById('work-area');
+        const container = document.getElementById('draggable-objects-container');
+        const ROTATING_IMG = document.getElementById('rotating-img');
+        const AREA_WIDTH = 1188;
+        const AREA_HEIGHT = 846;
+        const OBJECT_SIZE = 30; // オブジェクトの幅/高さ
+
+        // 状態管理変数 (ブラウザのリロードでリセットされる)
+        let currentBackground = 1;
+        let statePage1 = null; // 1ページ目のオブジェクト位置
+        let statePage2 = null; // 2ページ目のオブジェクト位置
+        const toggleButton = document.getElementById('toggle-background-button');
+        
+        // 🚨 セッション内で使用する画像セットを保持するための変数 (初回ロード時に設定)
+        let imageSets = null; 
+
+        // ----------------------------------------------------
+        // 🚨 固定画像の設定値（サイズとページごとの初期位置）
+        // ----------------------------------------------------
+        const FIXED_IMAGE_SETTINGS = {
+            'Agraios.png': {
+                size: { width: 60, height: 60 }, // 例として80x80に設定
+                page1: { top: 250, left: 250 },
+                page2: { top: 260, left: 920 }
+            },
+            'iatros.png': {
+                size: { width: 60, height: 60 }, // 例として40x60に設定
+                page1: { top: 350, left: 300 },
+                page2: { top: 480, left: 520 }
+            },
+            'epoptes.png': {
+                size: { width: 60, height: 60 }, // 例として100x40に設定
+                page1: { top: 350, left: 150 },
+                page2: { top: 280, left: 90 }
+            },
+            // ⬅️ ここにbeem.pngの設定を追加
+            'beem-1.png': {
+                size: { width: 60, height: 160 }, 
+                page1: { top: 60, left: 140, rotate: 20, opacity: 1.0 }, // 初期は不透明 (1.0)
+                page2: { top: 0, left: 0, rotate: 90, opacity: 0 } 
+            },
+            'beem-2.png': {
+                size: { width: 60, height: 160 }, 
+                page1: { top: 450, left: 90, rotate: 77, opacity: 0.2 }, // 初期は透過 (0.7)
+                page2: { top: 0, left: 0, rotate: 90, opacity: 0 }
+            },
+            'beem-3.png': {
+                size: { width: 60, height: 160 }, 
+                page1: { top: 320, left: 450, rotate: 140, opacity: 0.2 }, // 初期は透過 (0.7)
+                page2: { top: 0, left: 0, rotate: 90, opacity: 0 } 
+            }
+        };
+
+        // ----------------------------------------------------
+        // 1-1. 🖼️ 移動可能オブジェクトの画像選択ロジック
+        // ----------------------------------------------------
+        function selectDraggableImages() {
+            // 1. 1.png～10.pngから重複なく6枚を選ぶ
+            const allImageNumbers = Array.from({length: 10}, (_, i) => i + 1);
+            let randomSelected = [];
+            while (randomSelected.length < 6) {
+                const randomIndex = Math.floor(Math.random() * allImageNumbers.length);
+                const randomNumber = allImageNumbers.splice(randomIndex, 1)[0]; 
+                randomSelected.push(`${randomNumber}.png`);
+            }
+
+            // 2. 固定で追加する3つの画像
+            // const fixedImages = ['Agraios.png', 'iatros.png', 'epoptes.png'];
+            const fixedImages = ['Agraios.png', 'iatros.png', 'epoptes.png', 'beem-1.png', 'beem-2.png', 'beem-3.png'];
+            
+            // セッション全体でこのセットを使用
+            imageSets = {
+                random: randomSelected,
+                fixed: fixedImages
+            };
+            return imageSets;
+        }
+
+        // ----------------------------------------------------
+        // 1-2. 🖱️ オブジェクトの生成と初期配置
+        // ----------------------------------------------------
+
+function initializeDraggableObjects(initialPositions = null) {
+            const currentImageSets = imageSets || selectDraggableImages();
+            const allFileNames = currentImageSets.random.concat(currentImageSets.fixed);
+            const randomImageCount = currentImageSets.random.length; 
+
+            container.innerHTML = ''; 
+            const stateMap = new Map(Object.entries(initialPositions || {})); 
+            
+            // ... (ランダム画像の初期配置計算は変更なし) ...
+            const gap = 10;
+            const totalWidth = (randomImageCount * OBJECT_SIZE) + ((randomImageCount - 1) * gap);
+            // const startX = (AREA_WIDTH / 2) - (totalWidth / 2); 
+            const startX = 800
+            // const centerY = (AREA_HEIGHT / 2) - (OBJECT_SIZE / 2);
+            const centerY = 20
+
+            // 画像の生成と位置の設定
+allFileNames.forEach((fileName, index) => {
+                const isFixed = index >= randomImageCount; 
+                const id = `draggable-obj-${fileName.replace('.', '-')}`;
+                const img = document.createElement('img');
+                img.id = id;
+                img.src = isFixed && fileName.startsWith('beem-') ? 'images/beem.png' : `images/${fileName}`;
+                img.alt = `移動可能な部品 ${fileName}`;
+                
+                let top, left, width, height, rotate_style_value, opacity; // 修正点: rotate_style_valueを定義
+
+                if (!isFixed) {
+                    // **A. ランダムに選ばれた6枚**
+                    img.className = 'draggable-object'; 
+                    width = OBJECT_SIZE;
+                    height = OBJECT_SIZE;
+
+                    if (stateMap.has(id)) {
+                        top = stateMap.get(id).top;
+                        left = stateMap.get(id).left;
+                    } else {
+                        top = `${centerY}px`;
+                        left = `${startX + (index * (OBJECT_SIZE + gap))}px`;
+                    }
+                    rotate_style_value = 'rotate(0deg)';
+                    opacity = 1.0;
+
+                } else {
+                    // **B. 固定の画像**
+                    img.className = 'fixed-draggable-object'; 
+                    const settings = FIXED_IMAGE_SETTINGS[fileName];
+                    
+                    width = settings.size.width;
+                    height = settings.size.height;
+
+                    if (stateMap.has(id)) {
+                        // 状態を復元
+                        const state = stateMap.get(id);
+                        top = state.top;
+                        left = state.left;
+                        rotate_style_value = state.rotate; // ⬅️ FIX: "45deg" のような文字列をそのまま使用
+                        opacity = state.opacity; 
+                    } else {
+                        // 新規作成時は手動設定値を使用
+                        const pageSettings = currentBackground === 1 ? settings.page1 : settings.page2;
+                        top = `${pageSettings.top}px`;
+                        left = `${pageSettings.left}px`;
+                        rotate_style_value = `rotate(${pageSettings.rotate}deg)`; // ⬅️ FIX: 数値に 'deg' を付加してCSS形式に
+                        opacity = pageSettings.opacity;
+                    }
+                    
+                    // 個別サイズを適用
+                    img.style.width = `${width}px`;
+                    img.style.height = `${height}px`;
+
+                    // 🚨 beem.pngの画像にクリックイベントを設定
+                    if (fileName.startsWith('beem-')) {
+                        img.addEventListener('click', handleBeemClick);
+                    }
+                }
+
+                // 🚨 修正後のスタイル適用
+                img.style.top = top;
+                img.style.left = left;
+                img.style.transform = rotate_style_value; // ⬅️ FIX: rotate_style_value を直接適用
+                img.style.opacity = opacity;
+                
+                container.appendChild(img);
+            });
+            
+            attachDragListeners();
+        }
+
+        // ----------------------------------------------------
+        // 1-3. 🖱️ ドラッグ＆ドロップ機能 (変更なし)
+        // ----------------------------------------------------
+        
+        let activeDraggable = null;
+        let xOffset = 0;
+        let yOffset = 0;
+        
+        function dragStart(e) {
+            if (e.target.classList.contains('draggable-object')) {
+                activeDraggable = e.target;
+                
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                // ドラッグ中に最前面に来るようにZ-indexを変更
+                activeDraggable.style.zIndex = 100;
+
+                const rect = activeDraggable.getBoundingClientRect();
+                xOffset = clientX - rect.left;
+                yOffset = clientY - rect.top;
+                
+                activeDraggable.style.cursor = 'grabbing';
+                
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', dragEnd);
+                document.addEventListener('touchmove', drag);
+                document.addEventListener('touchend', dragEnd);
+            }
+        }
+
+        function drag(e) {
+            if (!activeDraggable) return;
+
+            e.preventDefault();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const areaRect = workArea.getBoundingClientRect();
+            const objectWidth = activeDraggable.offsetWidth;
+            const objectHeight = activeDraggable.offsetHeight;
+
+            let newX = clientX - areaRect.left - xOffset;
+            let newY = clientY - areaRect.top - yOffset;
+            
+            // 境界チェック (work-area内に収める)
+            newX = Math.max(0, Math.min(newX, AREA_WIDTH - objectWidth));
+            newY = Math.max(0, Math.min(newY, AREA_HEIGHT - objectHeight));
+
+            activeDraggable.style.left = `${newX}px`;
+            activeDraggable.style.top = `${newY}px`;
+        }
+
+        function dragEnd() {
+            if (activeDraggable) {
+                activeDraggable.style.cursor = 'grab';
+                activeDraggable.style.zIndex = 10; // Z-indexを元に戻す
+            }
+            activeDraggable = null;
+            
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', dragEnd);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('touchend', dragEnd);
+        }
+
+        function attachDragListeners() {
+            workArea.removeEventListener('mousedown', dragStart); 
+            workArea.removeEventListener('touchstart', dragStart);
+            workArea.addEventListener('mousedown', dragStart);
+            workArea.addEventListener('touchstart', dragStart);
+        }
+        
+        // ----------------------------------------------------
+        // 4. 💾 背景切り替えと状態一時保存
+        // ----------------------------------------------------
+
+function saveCurrentState() {
+            const state = {};
+            const objects = document.querySelectorAll('.draggable-object, .fixed-draggable-object'); 
+            objects.forEach(obj => {
+                // スタイルからトップとレフトを取得
+                const top = obj.style.top;
+                const left = obj.style.left;
+                
+                // transform (回転)と opacity (透過率)を現在の状態から取得し保存
+                const transform = obj.style.transform || 'rotate(0deg)';
+                const opacity = obj.style.opacity || '1.0';
+                const rotateMatch = transform.match(/rotate\(([^)]+)\)/);
+                const rotate = rotateMatch ? rotateMatch[1] : '0deg';
+
+                state[obj.id] = {
+                    top: top,
+                    left: left,
+                    rotate: transform, // ⬅️ FIX: transform全体 (例: "rotate(45deg)") を保存する
+                    opacity: opacity
+                };
+            });
+            
+            if (currentBackground === 1) {
+                statePage1 = state;
+            } else {
+                statePage2 = state;
+            }
+            return state;
+        }
+
+        // ----------------------------------------------------
+        // 5. ✨ beem.pngの透過率制御ロジック (ページ1のみ有効)
+        // ----------------------------------------------------
+
+        function handleBeemClick(e) {
+            if (currentBackground !== 1) {
+                // ページ1以外では動作しない
+                return;
+            }
+            
+            const clickedId = e.currentTarget.id; // 例: draggable-obj-beem-2-png
+            const allBeemIds = ['draggable-obj-beem-1-png', 'draggable-obj-beem-2-png', 'draggable-obj-beem-3-png'];
+
+            allBeemIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (!element) return;
+                
+                if (id === clickedId) {
+                    element.style.opacity = '1.0'; // クリックされたものは不透明 (0%)
+                } else {
+                    element.style.opacity = '0.2'; // それ以外は透過 (70%)
+                }
+            });
+            
+            // 状態を保存し、切り替えても透過率が維持されるようにする
+            saveCurrentState(); 
+        }
+
+        function toggleBackground() {
+            // 1. 現在の状態を保存
+            saveCurrentState();
+
+            // 2. 背景と状態を切り替える
+            if (currentBackground === 1) {
+                // Page 1 -> Page 2へ
+                currentBackground = 2;
+                workArea.style.backgroundImage = "url('images/background-base2.png')";
+                toggleButton.textContent = "背景を切り替える (現在: 2ページ目)";
+                
+                // 🔄 回転画像の表示と逆回転アニメーションの設定
+                ROTATING_IMG.style.display = 'block';
+                ROTATING_IMG.style.animation = 'slow-spin-reverse 15s linear infinite';
+                
+                // 状態2が既に保存されていれば復元、なければ新規配置
+                if (statePage2) {
+                    initializeDraggableObjects(statePage2);
+                } else {
+                    // Page 2の初回アクセス時: 初期配置ロジックで配置し、その状態を保存
+                    initializeDraggableObjects(null); 
+                    statePage2 = saveCurrentState(); 
+                }
+
+            } else {
+                // Page 2 -> Page 1へ
+                currentBackground = 1;
+                workArea.style.backgroundImage = "url('images/background-base.png')";
+                toggleButton.textContent = "背景を切り替える (現在: 1ページ目)";
+                
+                // 🔄 回転画像の非表示とアニメーションの停止
+                ROTATING_IMG.style.display = 'none';
+                ROTATING_IMG.style.animation = 'none';
+
+                // 状態1が既に保存されていれば復元、なければ新規配置
+                if (statePage1) {
+                    initializeDraggableObjects(statePage1);
+                } else {
+                    // Page 1の初回アクセス時のみ実行
+                    initializeDraggableObjects(null); 
+                    statePage1 = saveCurrentState();
+                }
+            }
+        }
+
+        toggleButton.addEventListener('click', toggleBackground);
+        
+        // ----------------------------------------------------
+        // ページロード時の初期化
+        // ----------------------------------------------------
+        
+        window.onload = function() {
+            // 🚨 全セッションで共通の画像セットを決定 (最初に1回だけ実行)
+            selectDraggableImages(); 
+            
+            // 初回ロード時はランダムな配置でオブジェクトを配置
+            initializeDraggableObjects(null); 
+            
+            // 初期配置の状態を Page 1 の状態として保存
+            statePage1 = saveCurrentState(); 
+        };
+        
+    </script>
+</body>
+</html>
